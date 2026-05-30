@@ -1,0 +1,105 @@
+name: ModPlugin
+version: ${project.version}
+main: com.modplugin.ModPlugin
+api-version: 1.8
+
+commands:
+  gmc:
+    description: Switch to creative mode
+    usage: /<command> [player]
+  gms:
+    description: Switch to survival mode
+    usage: /<command> [player]
+  gmsp:
+    description: Switch to spectator mode
+    usage: /<command> [player]
+  gma:
+    description: Switch to adventure mode
+    usage: /<command> [player]
+  staff:
+    description: Toggle staff mode
+    usage: /<command>
+  vanish:
+    description: Toggle vanish
+    usage: /<command>
+  freeze:
+    description: Freeze or unfreeze a player
+    usage: /<command> <player>
+  mute:
+    description: Mute or unmute a player
+    usage: /<command> <player>
+  inventory:
+    description: View a player's inventory
+    usage: /<command> <player>
+  enderchest:
+    description: View a player's ender chest
+    usage: /<command> <player>
+  modplugin:
+    description: Reload the plugin configuration
+    usage: /<command> reload
+
+permissions:
+  modplugin.gmc.self:
+    description: Use /gmc on yourself
+    default: op
+  modplugin.gmc.other:
+    description: Use /gmc on others
+    default: op
+  modplugin.gms.self:
+    description: Use /gms on yourself
+    default: op
+  modplugin.gms.other:
+    description: Use /gms on others
+    default: op
+  modplugin.gmsp.self:
+    description: Use /gmsp on yourself
+    default: op
+  modplugin.gmsp.other:
+    description: Use /gmsp on others
+    default: op
+  modplugin.gma.self:
+    description: Use /gma on yourself
+    default: op
+  modplugin.gma.other:
+    description: Use /gma on others
+    default: op
+  modplugin.all.self:
+    description: All gamemode self permissions
+    default: op
+    children:
+      modplugin.gmc.self: true
+      modplugin.gms.self: true
+      modplugin.gmsp.self: true
+      modplugin.gma.self: true
+  modplugin.all.other:
+    description: All gamemode other permissions
+    default: op
+    children:
+      modplugin.gmc.other: true
+      modplugin.gms.other: true
+      modplugin.gmsp.other: true
+      modplugin.gma.other: true
+  modplugin.staff:
+    description: Toggle staff mode
+    default: op
+  modplugin.vanish.use:
+    description: Use the /vanish command
+    default: op
+  modplugin.freeze.use:
+    description: Use the /freeze command
+    default: op
+  modplugin.mute.use:
+    description: Use the /mute command
+    default: op
+  modplugin.inventory.see:
+    description: View a player's inventory
+    default: op
+  modplugin.enderchest.see:
+    description: View a player's ender chest
+    default: op
+  modplugin.inventory.modify:
+    description: Modify items in viewed inventories and ender chests
+    default: op
+  modplugin.reload:
+    description: Reload the plugin configuration
+    default: op

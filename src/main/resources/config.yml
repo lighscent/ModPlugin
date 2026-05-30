@@ -1,0 +1,15 @@
+slots:
+  freeze: 4
+  inventory: 3
+  enderchest: 5
+  teleport: 0
+  vanish: 7
+  quit: 8
+
+silent-join:
+  enabled: true
+  permission: modplugin.silentjoin
+
+auto-vanish:
+  enabled: true
+  permission: modplugin.autovanish
