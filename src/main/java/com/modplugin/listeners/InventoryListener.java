@@ -2,6 +2,8 @@ package com.modplugin.listeners;
 
 import com.modplugin.ModPlugin;
 import com.modplugin.managers.InventoryViewer;
+import com.modplugin.managers.StaffModeManager;
+import com.modplugin.managers.VanishManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,10 +16,15 @@ public class InventoryListener implements Listener {
 
     private final ModPlugin plugin;
     private final InventoryViewer inventoryViewer;
+    private final StaffModeManager staffModeManager;
+    private final VanishManager vanishManager;
 
-    public InventoryListener(ModPlugin plugin, InventoryViewer inventoryViewer) {
+    public InventoryListener(ModPlugin plugin, InventoryViewer inventoryViewer,
+                             StaffModeManager staffModeManager, VanishManager vanishManager) {
         this.plugin = plugin;
         this.inventoryViewer = inventoryViewer;
+        this.staffModeManager = staffModeManager;
+        this.vanishManager = vanishManager;
     }
 
     @EventHandler
@@ -57,8 +64,14 @@ public class InventoryListener implements Listener {
     @EventHandler
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
         if (event.isCancelled()) return;
-        if (inventoryViewer.isWatched(event.getPlayer())) {
-            plugin.getServer().getScheduler().runTask(plugin, () -> inventoryViewer.refreshViewersOf(event.getPlayer()));
+        Player player = event.getPlayer();
+        boolean hidden = staffModeManager.isInStaffMode(player) || vanishManager.isVanished(player);
+        if (hidden && !staffModeManager.isPickupEnabled(player)) {
+            event.setCancelled(true);
+            return;
+        }
+        if (inventoryViewer.isWatched(player)) {
+            plugin.getServer().getScheduler().runTask(plugin, () -> inventoryViewer.refreshViewersOf(player));
         }
     }
 

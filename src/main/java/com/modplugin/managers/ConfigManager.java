@@ -25,6 +25,7 @@ public class ConfigManager {
     public int teleportSlot() { return slot("teleport"); }
     public int vanishSlot() { return slot("vanish"); }
     public int quitSlot() { return slot("quit"); }
+    public int pickupSlot() { return slot("pickup"); }
 
     public boolean isSilentJoinEnabled() {
         return config.getBoolean("silent-join.enabled", false);

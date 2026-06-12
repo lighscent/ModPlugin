@@ -76,7 +76,7 @@ public final class ModPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(
                 new PlayerStateListener(staffModeManager, vanishManager, freezeManager, muteManager, snapshotManager), this);
         getServer().getPluginManager().registerEvents(
-                new InventoryListener(this, inventoryViewer), this);
+                new InventoryListener(this, inventoryViewer, staffModeManager, vanishManager), this);
     }
 
     @Override

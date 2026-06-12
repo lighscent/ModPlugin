@@ -53,6 +53,8 @@ public class StaffInteractionListener implements Listener {
                 staffModeManager.setQuitPending(player, true);
                 player.sendMessage("§cClick the barrier again to quit staff mode.");
             }
+        } else if (item.getType() == Material.HOPPER) {
+            staffModeManager.togglePickup(player);
         }
     }
 
@@ -68,8 +70,9 @@ public class StaffInteractionListener implements Listener {
         Player target = (Player) event.getRightClicked();
 
         if (item.getType() == Material.BLAZE_ROD) {
-            freezeManager.toggleFreeze(target);
-            player.sendMessage(ChatColor.GRAY + (freezeManager.isFrozen(target) ? "Frozen " : "Unfrozen ") + target.getName() + ".");
+            if (freezeManager.toggleFreeze(target)) {
+                player.sendMessage(ChatColor.GRAY + (freezeManager.isFrozen(target) ? "Frozen " : "Unfrozen ") + target.getName() + ".");
+            }
         } else if (item.getType() == Material.CHEST) {
             inventoryViewer.openPlayerInventory(player, target);
         } else if (item.getType() == Material.ENDER_CHEST) {

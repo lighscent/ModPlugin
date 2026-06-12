@@ -18,15 +18,16 @@ public class FreezeManager {
         return frozenPlayers.contains(player.getUniqueId());
     }
 
-    public void toggleFreeze(Player target) {
+    public boolean toggleFreeze(Player target) {
         long now = System.currentTimeMillis();
-        if (now - lastToggle.getOrDefault(target.getUniqueId(), 0L) < 300) return;
+        if (now - lastToggle.getOrDefault(target.getUniqueId(), 0L) < 300) return false;
         lastToggle.put(target.getUniqueId(), now);
         if (frozenPlayers.contains(target.getUniqueId())) {
             unfreezePlayer(target);
         } else {
             freezePlayer(target);
         }
+        return true;
     }
 
     public void freezePlayer(Player target) {

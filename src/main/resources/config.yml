@@ -5,6 +5,7 @@ slots:
   teleport: 0
   vanish: 7
   quit: 8
+  pickup: 6
 
 silent-join:
   enabled: true

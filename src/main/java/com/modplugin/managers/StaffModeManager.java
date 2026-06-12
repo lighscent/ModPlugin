@@ -28,6 +28,7 @@ public class StaffModeManager {
     private final ConfigManager config;
     private final Set<UUID> staffModePlayers = new HashSet<>();
     private final Set<UUID> staffQuitPending = new HashSet<>();
+    private final Set<UUID> pickupEnabled = new HashSet<>();
     private VanishManager vanishManager;
 
     public StaffModeManager(DatabaseManager db, Logger logger, ConfigManager config) {
@@ -54,6 +55,30 @@ public class StaffModeManager {
         db.executeUpdate("ALTER TABLE staff_data ADD COLUMN IF NOT EXISTS z DOUBLE");
         db.executeUpdate("ALTER TABLE staff_data ADD COLUMN IF NOT EXISTS yaw DOUBLE");
         db.executeUpdate("ALTER TABLE staff_data ADD COLUMN IF NOT EXISTS pitch DOUBLE");
+    }
+
+    public boolean isPickupEnabled(Player player) {
+        return pickupEnabled.contains(player.getUniqueId());
+    }
+
+    public boolean togglePickup(Player player) {
+        boolean enabled;
+        if (pickupEnabled.contains(player.getUniqueId())) {
+            pickupEnabled.remove(player.getUniqueId());
+            enabled = false;
+        } else {
+            pickupEnabled.add(player.getUniqueId());
+            enabled = true;
+        }
+        int slot = config.pickupSlot();
+        ItemStack item = player.getInventory().getItem(slot);
+        if (item != null && item.getType() == Material.HOPPER) {
+            ItemMeta meta = item.getItemMeta();
+            meta.setDisplayName(enabled ? "§aPickup ON" : "§cPickup OFF");
+            item.setItemMeta(meta);
+            player.getInventory().setItem(slot, item);
+        }
+        return enabled;
     }
 
     public boolean isInStaffMode(Player player) {
@@ -137,6 +162,8 @@ public class StaffModeManager {
         inv.setItem(config.teleportSlot(), makeItem(Material.ENDER_PEARL, "§bTeleport"));
         inv.setItem(config.vanishSlot(), makeItem(Material.EYE_OF_ENDER, "§bVanish"));
         inv.setItem(config.quitSlot(), makeItem(Material.BARRIER, "§cQuit Staff Mode"));
+        inv.setItem(config.pickupSlot(), makeItem(Material.HOPPER,
+                pickupEnabled.contains(player.getUniqueId()) ? "§aPickup ON" : "§cPickup OFF"));
     }
 
     private ItemStack makeItem(Material material, String name) {
