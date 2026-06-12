@@ -1,15 +1,10 @@
 package com.modplugin;
 
-import com.modplugin.commands.EnderChestCommand;
-import com.modplugin.commands.FreezeCommand;
-import com.modplugin.commands.GamemodeCommand;
-import com.modplugin.commands.InventoryCommand;
-import com.modplugin.commands.ModPluginCommand;
-import com.modplugin.commands.MuteCommand;
-import com.modplugin.commands.StaffCommand;
-import com.modplugin.commands.VanishCommand;
+import com.modplugin.commands.*;
 import com.modplugin.database.DatabaseManager;
-import com.modplugin.listeners.StaffModeListener;
+import com.modplugin.listeners.InventoryListener;
+import com.modplugin.listeners.PlayerStateListener;
+import com.modplugin.listeners.StaffInteractionListener;
 import com.modplugin.managers.*;
 import org.bukkit.GameMode;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,10 +22,12 @@ public final class ModPlugin extends JavaPlugin {
     private MuteManager muteManager;
     private PlayerSnapshotManager snapshotManager;
     private InventoryViewer inventoryViewer;
+    private ConfigManager configManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        configManager = new ConfigManager(getConfig());
 
         commandModes.put("gmc", GameMode.CREATIVE);
         commandModes.put("gms", GameMode.SURVIVAL);
@@ -46,18 +43,24 @@ public final class ModPlugin extends JavaPlugin {
         databaseManager = new DatabaseManager(this);
         databaseManager.init();
 
-        staffModeManager = new StaffModeManager(databaseManager, getLogger(), getConfig());
-        staffModeManager.createTable();
-
-        vanishManager = new VanishManager(getConfig());
         freezeManager = new FreezeManager();
         muteManager = new MuteManager();
+        vanishManager = new VanishManager(configManager);
         snapshotManager = new PlayerSnapshotManager(databaseManager, getLogger());
         snapshotManager.createTable();
         inventoryViewer = new InventoryViewer(databaseManager, getLogger());
 
+        staffModeManager = new StaffModeManager(databaseManager, getLogger(), configManager);
         staffModeManager.setVanishManager(vanishManager);
+        staffModeManager.createTable();
 
+        registerCommands();
+        registerListeners();
+
+        getLogger().info("ModPlugin has been enabled!");
+    }
+
+    private void registerCommands() {
         getCommand("staff").setExecutor(new StaffCommand(staffModeManager));
         getCommand("vanish").setExecutor(new VanishCommand(vanishManager));
         getCommand("freeze").setExecutor(new FreezeCommand(freezeManager));
@@ -65,22 +68,21 @@ public final class ModPlugin extends JavaPlugin {
         getCommand("inventory").setExecutor(new InventoryCommand(inventoryViewer));
         getCommand("enderchest").setExecutor(new EnderChestCommand(inventoryViewer));
         getCommand("modplugin").setExecutor(new ModPluginCommand(this, staffModeManager));
+    }
 
+    private void registerListeners() {
         getServer().getPluginManager().registerEvents(
-                new StaffModeListener(this, staffModeManager, vanishManager, freezeManager,
-                        muteManager, snapshotManager, inventoryViewer), this);
-
-        getLogger().info("ModPlugin has been enabled!");
+                new StaffInteractionListener(staffModeManager, vanishManager, freezeManager, inventoryViewer), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerStateListener(staffModeManager, vanishManager, freezeManager, muteManager, snapshotManager), this);
+        getServer().getPluginManager().registerEvents(
+                new InventoryListener(this, inventoryViewer), this);
     }
 
     @Override
     public void onDisable() {
-        if (snapshotManager != null) {
-            snapshotManager.saveAllOnlinePlayers();
-        }
-        if (databaseManager != null) {
-            databaseManager.close();
-        }
+        if (snapshotManager != null) snapshotManager.saveAllOnlinePlayers();
+        if (databaseManager != null) databaseManager.close();
         getLogger().info("ModPlugin has been disabled!");
     }
 

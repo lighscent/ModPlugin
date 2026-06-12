@@ -50,9 +50,7 @@ public class DatabaseManager {
     public void executeUpdate(String sql, Object... params) {
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
+            setParameters(stmt, params);
             stmt.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to execute update: " + sql, e);
@@ -62,9 +60,7 @@ public class DatabaseManager {
     public ResultSet executeQuery(String sql, Object... params) throws SQLException {
         Connection conn = dataSource.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql);
-        for (int i = 0; i < params.length; i++) {
-            stmt.setObject(i + 1, params[i]);
-        }
+        setParameters(stmt, params);
         ResultSet rs = stmt.executeQuery();
         ClassLoader cl = getClass().getClassLoader();
         return (ResultSet) Proxy.newProxyInstance(cl, new Class[]{ResultSet.class},
@@ -79,6 +75,12 @@ public class DatabaseManager {
                     }
                     return method.invoke(rs, args);
                 });
+    }
+
+    private void setParameters(PreparedStatement stmt, Object... params) throws SQLException {
+        for (int i = 0; i < params.length; i++) {
+            stmt.setObject(i + 1, params[i]);
+        }
     }
 
     public boolean isConnected() {

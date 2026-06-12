@@ -16,15 +16,9 @@ public class VanishCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
-            return true;
-        }
-        if (!sender.hasPermission("modplugin.vanish.use")) {
-            sender.sendMessage("No permission.");
-            return true;
-        }
-        vanishManager.toggleVanish((Player) sender);
+        Player player = CommandUtil.requirePlayer(sender);
+        if (player == null || !CommandUtil.requirePermission(sender, "modplugin.vanish.use")) return true;
+        vanishManager.toggleVanish(player);
         return true;
     }
 }

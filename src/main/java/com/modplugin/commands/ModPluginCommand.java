@@ -19,18 +19,13 @@ public class ModPluginCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!sender.hasPermission("modplugin.reload")) {
-            sender.sendMessage(ChatColor.RED + "No permission.");
-            return true;
-        }
-
+        if (!CommandUtil.requirePermission(sender, "modplugin.reload")) return true;
         if (args.length < 1 || !args[0].equalsIgnoreCase("reload")) {
             sender.sendMessage(ChatColor.RED + "Usage: /modplugin reload");
             return true;
         }
-
         plugin.reloadConfig();
-        staffModeManager.reloadConfig(plugin.getConfig());
+        staffModeManager.getConfigManager().reload(plugin.getConfig());
         sender.sendMessage(ChatColor.GREEN + "ModPlugin config reloaded.");
         return true;
     }

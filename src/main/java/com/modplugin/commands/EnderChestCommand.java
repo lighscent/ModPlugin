@@ -24,26 +24,15 @@ public class EnderChestCommand implements TabExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return true;
-        }
-        if (!sender.hasPermission("modplugin.enderchest.see")) {
-            sender.sendMessage(ChatColor.RED + "No permission.");
-            return true;
-        }
+        Player player = CommandUtil.requirePlayer(sender);
+        if (player == null || !CommandUtil.requirePermission(sender, "modplugin.enderchest.see")) return true;
         if (args.length < 1) {
             sender.sendMessage(ChatColor.RED + "Usage: /" + label + " <player>");
             return true;
         }
-
         Player target = Bukkit.getPlayerExact(args[0]);
-        Player viewer = (Player) sender;
-        if (target != null) {
-            inventoryViewer.openPlayerEnderChest(viewer, target);
-        } else {
-            inventoryViewer.openOfflinePlayerEnderChest(viewer, args[0]);
-        }
+        if (target != null) inventoryViewer.openPlayerEnderChest(player, target);
+        else inventoryViewer.openOfflinePlayerEnderChest(player, args[0]);
         return true;
     }
 

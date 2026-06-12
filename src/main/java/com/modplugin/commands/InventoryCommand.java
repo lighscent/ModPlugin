@@ -24,26 +24,15 @@ public class InventoryCommand implements TabExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return true;
-        }
-        if (!sender.hasPermission("modplugin.inventory.see")) {
-            sender.sendMessage(ChatColor.RED + "No permission.");
-            return true;
-        }
+        Player player = CommandUtil.requirePlayer(sender);
+        if (player == null || !CommandUtil.requirePermission(sender, "modplugin.inventory.see")) return true;
         if (args.length < 1) {
             sender.sendMessage(ChatColor.RED + "Usage: /" + label + " <player>");
             return true;
         }
-
         Player target = Bukkit.getPlayerExact(args[0]);
-        Player viewer = (Player) sender;
-        if (target != null) {
-            inventoryViewer.openPlayerInventory(viewer, target);
-        } else {
-            inventoryViewer.openOfflinePlayerInventory(viewer, args[0]);
-        }
+        if (target != null) inventoryViewer.openPlayerInventory(player, target);
+        else inventoryViewer.openOfflinePlayerInventory(player, args[0]);
         return true;
     }
 

@@ -3,19 +3,25 @@ package com.modplugin.managers;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 public class FreezeManager {
 
     private final Set<UUID> frozenPlayers = new HashSet<>();
+    private final Map<UUID, Long> lastToggle = new HashMap<>();
 
     public boolean isFrozen(Player player) {
         return frozenPlayers.contains(player.getUniqueId());
     }
 
     public void toggleFreeze(Player target) {
+        long now = System.currentTimeMillis();
+        if (now - lastToggle.getOrDefault(target.getUniqueId(), 0L) < 300) return;
+        lastToggle.put(target.getUniqueId(), now);
         if (frozenPlayers.contains(target.getUniqueId())) {
             unfreezePlayer(target);
         } else {

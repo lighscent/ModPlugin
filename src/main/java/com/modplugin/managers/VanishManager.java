@@ -3,7 +3,6 @@ package com.modplugin.managers;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,13 +16,9 @@ import java.util.UUID;
 public class VanishManager {
 
     private final Set<UUID> vanishedPlayers = new HashSet<>();
-    private FileConfiguration config;
+    private final ConfigManager config;
 
-    public VanishManager(FileConfiguration config) {
-        this.config = config;
-    }
-
-    public void reloadConfig(FileConfiguration config) {
+    public VanishManager(ConfigManager config) {
         this.config = config;
     }
 
@@ -32,11 +27,8 @@ public class VanishManager {
     }
 
     public void toggleVanish(Player player) {
-        if (vanishedPlayers.contains(player.getUniqueId())) {
-            unvanishPlayer(player);
-        } else {
-            vanishPlayer(player);
-        }
+        if (vanishedPlayers.contains(player.getUniqueId())) unvanishPlayer(player);
+        else vanishPlayer(player);
     }
 
     public void vanishPlayer(Player player) {
@@ -44,9 +36,7 @@ public class VanishManager {
         setVanished(player, true);
         player.setPlayerListName("");
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!p.equals(player)) {
-                p.hidePlayer(player);
-            }
+            if (!p.equals(player)) p.hidePlayer(player);
         }
         updateVanishItem(player, true);
         player.sendMessage(ChatColor.GRAY + "You are now vanished.");
@@ -72,8 +62,8 @@ public class VanishManager {
         }
     }
 
-    public void updateVanishItem(Player player, boolean vanished) {
-        int s = config.getInt("slots.vanish", 0);
+    private void updateVanishItem(Player player, boolean vanished) {
+        int s = config.vanishSlot();
         ItemStack eye = player.getInventory().getItem(s);
         if (eye == null || eye.getType() != Material.EYE_OF_ENDER) return;
         ItemMeta meta = eye.getItemMeta();
@@ -92,9 +82,7 @@ public class VanishManager {
 
     private void revealPlayer(Player player) {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!p.equals(player)) {
-                p.showPlayer(player);
-            }
+            if (!p.equals(player)) p.showPlayer(player);
         }
     }
 }

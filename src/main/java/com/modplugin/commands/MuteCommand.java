@@ -1,7 +1,6 @@
 package com.modplugin.commands;
 
 import com.modplugin.managers.MuteManager;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,19 +17,13 @@ public class MuteCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!sender.hasPermission("modplugin.mute.use")) {
-            sender.sendMessage(ChatColor.RED + "No permission.");
-            return true;
-        }
+        if (!CommandUtil.requirePermission(sender, "modplugin.mute.use")) return true;
         if (args.length == 0) {
             sender.sendMessage(ChatColor.RED + "Usage: /mute <player>");
             return true;
         }
-        Player target = Bukkit.getPlayerExact(args[0]);
-        if (target == null) {
-            sender.sendMessage(ChatColor.RED + "Player not found.");
-            return true;
-        }
+        Player target = CommandUtil.findPlayer(sender, args[0]);
+        if (target == null) return true;
         muteManager.toggleMute(target);
         sender.sendMessage(ChatColor.GRAY + (muteManager.isMuted(target) ? "Muted " : "Unmuted ") + target.getName() + ".");
         return true;

@@ -6,7 +6,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -26,12 +25,12 @@ public class StaffModeManager {
 
     private final DatabaseManager db;
     private final Logger logger;
+    private final ConfigManager config;
     private final Set<UUID> staffModePlayers = new HashSet<>();
     private final Set<UUID> staffQuitPending = new HashSet<>();
     private VanishManager vanishManager;
-    private FileConfiguration config;
 
-    public StaffModeManager(DatabaseManager db, Logger logger, FileConfiguration config) {
+    public StaffModeManager(DatabaseManager db, Logger logger, ConfigManager config) {
         this.db = db;
         this.logger = logger;
         this.config = config;
@@ -41,34 +40,14 @@ public class StaffModeManager {
         this.vanishManager = vanishManager;
     }
 
-    public void reloadConfig(FileConfiguration config) {
-        this.config = config;
-    }
-
-    public FileConfiguration getConfig() {
+    public ConfigManager getConfigManager() {
         return config;
     }
 
-    private int slot(String key) {
-        return config.getInt("slots." + key, 0);
-    }
-
-    public boolean hasSilentJoin(Player player) {
-        if (!config.getBoolean("silent-join.enabled", false)) return false;
-        return player.hasPermission(config.getString("silent-join.permission", "modplugin.silentjoin"));
-    }
-
-    public boolean hasAutoVanish(Player player) {
-        if (!config.getBoolean("auto-vanish.enabled", false)) return false;
-        return player.hasPermission(config.getString("auto-vanish.permission", "modplugin.autovanish"));
-    }
-
     public void createTable() {
-        db.executeUpdate(
-                "CREATE TABLE IF NOT EXISTS staff_data (" +
-                        "uuid VARCHAR(36) PRIMARY KEY, " +
-                        "inventory CLOB, armor CLOB, level INT, exp DOUBLE, " +
-                        "total_exp INT, effects CLOB)");
+        db.executeUpdate("CREATE TABLE IF NOT EXISTS staff_data (" +
+                "uuid VARCHAR(36) PRIMARY KEY, inventory CLOB, armor CLOB, level INT, " +
+                "exp DOUBLE, total_exp INT, effects CLOB)");
         db.executeUpdate("ALTER TABLE staff_data ADD COLUMN IF NOT EXISTS world VARCHAR(64)");
         db.executeUpdate("ALTER TABLE staff_data ADD COLUMN IF NOT EXISTS x DOUBLE");
         db.executeUpdate("ALTER TABLE staff_data ADD COLUMN IF NOT EXISTS y DOUBLE");
@@ -108,17 +87,13 @@ public class StaffModeManager {
     }
 
     public void toggleStaffMode(Player player) {
-        if (isInStaffMode(player)) {
-            disableStaffMode(player);
-        } else {
-            enableStaffMode(player);
-        }
+        if (isInStaffMode(player)) disableStaffMode(player);
+        else enableStaffMode(player);
     }
 
     public void enableStaffMode(Player player) {
-        UUID uuid = player.getUniqueId();
         savePlayerData(player);
-        staffModePlayers.add(uuid);
+        staffModePlayers.add(player.getUniqueId());
         applyStaffItems(player);
         if (vanishManager != null) vanishManager.vanishPlayer(player);
         applyNightVision(player);
@@ -126,8 +101,7 @@ public class StaffModeManager {
     }
 
     public void disableStaffMode(Player player) {
-        UUID uuid = player.getUniqueId();
-        staffModePlayers.remove(uuid);
+        staffModePlayers.remove(player.getUniqueId());
         if (vanishManager != null && vanishManager.isVanished(player)) {
             vanishManager.unvanishPlayer(player);
         }
@@ -140,9 +114,8 @@ public class StaffModeManager {
     }
 
     public void restoreStaffMode(Player player) {
-        UUID uuid = player.getUniqueId();
-        if (!hasSavedData(uuid)) return;
-        staffModePlayers.add(uuid);
+        if (!hasSavedData(player.getUniqueId())) return;
+        staffModePlayers.add(player.getUniqueId());
         applyStaffItems(player);
         if (vanishManager != null) vanishManager.vanishPlayer(player);
         applyNightVision(player);
@@ -158,12 +131,12 @@ public class StaffModeManager {
         player.setExp(0);
         player.setGameMode(GameMode.CREATIVE);
 
-        inv.setItem(slot("freeze"), makeItem(Material.BLAZE_ROD, "§bFreeze"));
-        inv.setItem(slot("inventory"), makeItem(Material.CHEST, "§bInventory"));
-        inv.setItem(slot("enderchest"), makeItem(Material.ENDER_CHEST, "§bEnder Chest"));
-        inv.setItem(slot("teleport"), makeItem(Material.ENDER_PEARL, "§bTeleport"));
-        inv.setItem(slot("vanish"), makeItem(Material.EYE_OF_ENDER, "§bVanish"));
-        inv.setItem(slot("quit"), makeItem(Material.BARRIER, "§cQuit Staff Mode"));
+        inv.setItem(config.freezeSlot(), makeItem(Material.BLAZE_ROD, "§bFreeze"));
+        inv.setItem(config.inventorySlot(), makeItem(Material.CHEST, "§bInventory"));
+        inv.setItem(config.enderchestSlot(), makeItem(Material.ENDER_CHEST, "§bEnder Chest"));
+        inv.setItem(config.teleportSlot(), makeItem(Material.ENDER_PEARL, "§bTeleport"));
+        inv.setItem(config.vanishSlot(), makeItem(Material.EYE_OF_ENDER, "§bVanish"));
+        inv.setItem(config.quitSlot(), makeItem(Material.BARRIER, "§cQuit Staff Mode"));
     }
 
     private ItemStack makeItem(Material material, String name) {
@@ -216,7 +189,8 @@ public class StaffModeManager {
 
                 World world = Bukkit.getWorld(rs.getString("world"));
                 if (world != null) {
-                    player.teleport(new Location(world, rs.getDouble("x"), rs.getDouble("y"), rs.getDouble("z"),
+                    player.teleport(new Location(world,
+                            rs.getDouble("x"), rs.getDouble("y"), rs.getDouble("z"),
                             (float) rs.getDouble("yaw"), (float) rs.getDouble("pitch")));
                 }
                 db.executeUpdate("DELETE FROM staff_data WHERE uuid = ?", player.getUniqueId().toString());

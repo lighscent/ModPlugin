@@ -1,7 +1,6 @@
 package com.modplugin.commands;
 
 import com.modplugin.managers.StaffModeManager;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,17 +16,8 @@ public class StaffCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Only players can use this command.");
-            return true;
-        }
-
-        if (!sender.hasPermission("modplugin.staff")) {
-            sender.sendMessage(ChatColor.RED + "No permission.");
-            return true;
-        }
-
-        Player player = (Player) sender;
+        Player player = CommandUtil.requirePlayer(sender);
+        if (player == null || !CommandUtil.requirePermission(sender, "modplugin.staff")) return true;
         staffModeManager.toggleStaffMode(player);
         return true;
     }
